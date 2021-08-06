@@ -8,6 +8,10 @@ class Signal:
     def removeSlot(self, slot):
         self.slots.remove(slot)
 
-    def signal(self):
+    def signal0(self):
         for slot in self.slots:
             slot()
+
+    def signal1(self, x):
+        for slot in self.slots:
+            slot(x)

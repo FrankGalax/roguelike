@@ -15,7 +15,7 @@ class PathComponent(Component):
         self.owner.pathComponent = self
 
     def setPathTo(self, destX: int, destY: int):
-        gameMap = self.owner.gameMap
+        gameMap: GameMap = self.owner.gameMap
         cost = np.array(gameMap.tiles["walkable"], dtype=np.int8)
 
         for entity in gameMap.entities:

@@ -4,7 +4,8 @@ from tcod.console import Console
 
 import tiletypes
 from entity import Entity
-
+from message import MessageLog
+import color
 
 class GameMap:
     def __init__(self, width: int, height: int, entities: Iterable[Entity] = (), player: Optional[Entity] = None):
@@ -14,6 +15,8 @@ class GameMap:
         self.visible = np.full((width, height), fill_value=False, order="F")
         self.explored = np.full((width, height), fill_value=False, order="F")
         self.player = player
+        self.messageLog = MessageLog()
+        self.messageLog.addMessage("Hello and welcome, adventurer, to yet another dungeon!", color.welcomeText)
 
     def inBounds(self, x: int, y: int) -> bool:
         return 0 <= x < self.width and 0 <= y < self.height
@@ -30,6 +33,8 @@ class GameMap:
         for entity in sortedEntities:
             if self.visible[entity.x, entity.y]:
                 console.print(entity.x, entity.y, entity.char, fg=entity.color)
+
+        self.messageLog.render(console=console, x=21, y=45, width=50, height=5)
 
     def getBlockingEntityAtLocation(self, x: int, y: int) -> Optional[Entity]:
         for entity in self.entities:

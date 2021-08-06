@@ -10,6 +10,7 @@ from inputhandlers import EventHandler
 from statemachine import StateMachine, State
 from procgen import generateDungeon
 from actions import Action
+from ui import UI
 
 
 class GameState(State):
@@ -36,6 +37,7 @@ class DungeonGameState(GameState):
     def __init__(self, player: Entity, engine):
         super().__init__(player, engine)
         self.gameMap: Optional[GameMap] = None
+        self.ui = UI(player)
 
     def enter(self):
         mapWidth = 80
@@ -66,6 +68,9 @@ class DungeonGameState(GameState):
         self.handleEnemiesTurn()
         self.updateFov()
 
+        if not self.player.damageComponent.isAlive:
+            self.engine.stateMachine.transition(DeadPlayerGameState(self.player, self.engine))
+
     def handleEnemiesTurn(self):
         for enemy in self.gameMap.entities - {self.player}:
             if enemy.aiComponent:
@@ -83,6 +88,14 @@ class DungeonGameState(GameState):
 
     def render(self, console: Console, context: Context):
         self.gameMap.render(console)
+        self.ui.renderHealthBar(console, totalWidth=20)
+
+        context.present(console)
+        console.clear()
+
+
+class DeadPlayerGameState(GameState):
+    def render(self, console: Console, context: Context):
         context.present(console)
         console.clear()
 

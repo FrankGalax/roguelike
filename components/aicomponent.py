@@ -2,7 +2,7 @@ from typing import Optional
 from components.component import Component
 from entity import Entity
 from gamemap import GameMap
-from actions import Action, MovementAction
+from actions import Action, MovementAction, MeleeAction
 from statemachine import StateMachine, State
 
 
@@ -21,7 +21,7 @@ class GoToPlayerState(State):
 
         if self.entity.gameMap.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
-                return None
+                return MeleeAction(self.entity, distanceX, distanceY)
 
             self.entity.pathComponent.setPathTo(self.player.x, self.player.y)
 

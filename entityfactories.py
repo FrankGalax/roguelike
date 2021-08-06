@@ -8,18 +8,18 @@ from components.aicomponent import MeleeHostileAIComponent
 from gamemap import GameMap
 
 player = Entity(char="@", color=(255, 255, 255), name="Player", blocksMovement=True, renderOrder=RenderOrder.Actor)
-player.addComponent(DamageComponent(10, 2))
+player.addComponent(DamageComponent(10, 1))
 player.addComponent(MeleeComponent(2))
 
 orc = Entity(char="o", color=(63, 127, 63), name="Orc", blocksMovement=True, renderOrder=RenderOrder.Actor)
 orc.addComponent(DamageComponent(4, 0))
-orc.addComponent(MeleeComponent(1))
+orc.addComponent(MeleeComponent(2))
 orc.addComponent(PathComponent())
 orc.addComponent(MeleeHostileAIComponent())
 
 troll = Entity(char="T", color=(0, 127, 0), name="Troll", blocksMovement=True, renderOrder=RenderOrder.Actor)
 troll.addComponent(DamageComponent(8, 1))
-troll.addComponent(MeleeComponent(2))
+troll.addComponent(MeleeComponent(3))
 troll.addComponent(PathComponent())
 troll.addComponent(MeleeHostileAIComponent())
 

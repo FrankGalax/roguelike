@@ -1,7 +1,6 @@
 from typing import Optional, Tuple
 
 from entity import Entity
-from gamemap import GameMap
 
 
 class Action:
@@ -48,7 +47,7 @@ class MeleeAction(ActionWithDirection):
         if not self.entity.meleeComponent:
             return
 
-        target.damageComponent.takeDamage(self.entity.meleeComponent.attack)
+        target.damageComponent.takeDamage(self.entity, self.entity.meleeComponent.attack)
 
 
 class MovementAction(ActionWithDirection):

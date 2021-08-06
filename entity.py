@@ -42,3 +42,7 @@ class Entity:
     def addComponent(self, component):
         component.setOwner(self)
         self.components.append(component)
+
+    @property
+    def isPlayer(self):
+        return self is self.gameMap.player
