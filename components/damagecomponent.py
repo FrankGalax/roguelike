@@ -1,6 +1,6 @@
 from components.component import Component
 from entity import RenderOrder
-
+from signal import Signal
 
 class DamageComponent(Component):
     def __init__(self, maxHp: int, armor: int):
@@ -9,6 +9,7 @@ class DamageComponent(Component):
         self.currentHp = maxHp
         self.armor = armor
         self.isAlive = True
+        self.signalDie = Signal()
 
     def onOwnerChanged(self):
         self.owner.damageComponent = self
@@ -34,3 +35,4 @@ class DamageComponent(Component):
         self.owner.name = f"Remains of {self.owner.name}"
         self.owner.renderOrder = RenderOrder.Corpse
         self.isAlive = False
+        self.signalDie.signal()

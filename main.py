@@ -36,7 +36,9 @@ def main():
         player=player
     )
 
-    eventHandler = EventHandler(player, gameMap)
+    player.setGameMap(gameMap)
+
+    eventHandler = EventHandler(player)
 
     engine = Engine(eventHandler=eventHandler, gameMap=gameMap, player=player)
 

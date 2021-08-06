@@ -7,9 +7,8 @@ from gamemap import GameMap
 
 
 class Action:
-    def __init__(self, entity: Entity, gameMap: GameMap) -> None:
+    def __init__(self, entity: Entity) -> None:
         self.entity = entity
-        self.gameMap = gameMap
 
     def perform(self) -> None:
         raise NotImplementedError()
@@ -21,8 +20,8 @@ class EscapeAction(Action):
 
 
 class ActionWithDirection(Action):
-    def __init__(self, entity: Entity, gameMap: GameMap, dx: int, dy: int):
-        super().__init__(entity, gameMap)
+    def __init__(self, entity: Entity, dx: int, dy: int):
+        super().__init__(entity)
         self.dx = dx
         self.dy = dy
 
@@ -32,7 +31,7 @@ class ActionWithDirection(Action):
 
     @property
     def blockingEntity(self) -> Optional[Entity]:
-        return self.gameMap.getBlockingEntityAtLocation(*self.destXY)
+        return self.entity.gameMap.getBlockingEntityAtLocation(*self.destXY)
 
     def perform(self) -> None:
         raise NotImplementedError()
@@ -58,11 +57,12 @@ class MovementAction(ActionWithDirection):
     def perform(self) -> None:
         destX, destY = self.destXY
 
-        if not self.gameMap.inBounds(destX, destY):
+        gameMap = self.entity.gameMap
+        if not gameMap.inBounds(destX, destY):
             return
-        if not self.gameMap.tiles["walkable"][destX, destY]:
+        if not gameMap.tiles["walkable"][destX, destY]:
             return
-        if self.gameMap.getBlockingEntityAtLocation(destX, destY):
+        if gameMap.getBlockingEntityAtLocation(destX, destY):
             return
 
         self.entity.move(self.dx, self.dy)
@@ -72,7 +72,8 @@ class BumpAction(ActionWithDirection):
     def perform(self) -> None:
         destX, destY = self.destXY
 
-        if self.gameMap.getBlockingEntityAtLocation(destX, destY):
-            return MeleeAction(self.entity, self.gameMap, self.dx, self.dy).perform()
+        gameMap = self.entity.gameMap
+        if gameMap.getBlockingEntityAtLocation(destX, destY):
+            return MeleeAction(self.entity, self.dx, self.dy).perform()
 
-        return MovementAction(self.entity, self.gameMap, self.dx, self.dy).perform()
+        return MovementAction(self.entity, self.dx, self.dy).perform()

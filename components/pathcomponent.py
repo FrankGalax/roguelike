@@ -14,10 +14,11 @@ class PathComponent(Component):
     def onOwnerChanged(self):
         self.owner.pathComponent = self
 
-    def setPathTo(self, gamemap: GameMap, destX: int, destY: int):
-        cost = np.array(gamemap.tiles["walkable"], dtype=np.int8)
+    def setPathTo(self, destX: int, destY: int):
+        gameMap = self.owner.gameMap
+        cost = np.array(gameMap.tiles["walkable"], dtype=np.int8)
 
-        for entity in gamemap.entities:
+        for entity in gameMap.entities:
             # Check that an enitiy blocks movement and the cost isn't zero (blocking.)
             if entity.blocksMovement and cost[entity.x, entity.y]:
                 # Add to the cost of a blocked position.

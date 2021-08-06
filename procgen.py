@@ -35,7 +35,7 @@ def generateDungeon(
     maxMonstersPerRoom: int,
     player: Entity,
 ) -> GameMap:
-    dungeon = GameMap(mapWidth, mapHeight, entities=[player])
+    dungeon = GameMap(mapWidth, mapHeight, entities=[player], player=player)
 
     rooms: List[RectangularRoom] = []
 

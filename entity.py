@@ -1,7 +1,6 @@
 from typing import Tuple
 from enum import auto, Enum
 
-
 class RenderOrder(Enum):
     Corpse = auto()
     Item = auto()
@@ -31,6 +30,10 @@ class Entity:
         self.pathComponent = None
         self.aiComponent = None
         self.renderOrder = renderOrder
+        self.gameMap = None
+
+    def setGameMap(self, gameMap):
+        self.gameMap = gameMap
 
     def move(self, dx: int, dy: int):
         self.x += dx

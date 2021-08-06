@@ -29,8 +29,10 @@ class Engine:
 
     def handleEnemiesTurn(self):
         for enemy in self.gameMap.entities - {self.player}:
-            # print(f"The {enemy.name} wonders when it will make a real action")
-            pass
+            if enemy.aiComponent:
+                action = enemy.aiComponent.getAction()
+                if action:
+                    action.perform()
 
     def updateFov(self) -> None:
         self.gameMap.visible[:] = compute_fov(

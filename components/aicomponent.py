@@ -2,7 +2,7 @@ from typing import Optional
 from components.component import Component
 from entity import Entity
 from gamemap import GameMap
-from actions import Action
+from actions import Action, MovementAction
 from statemachine import StateMachine, State
 
 
@@ -18,37 +18,50 @@ class GoToPlayerState(State):
         distanceX = self.player.x - self.entity.x
         distanceY = self.player.y - self.entity.y
         distance = max(abs(distanceX), abs(distanceY))
-        """
-        if self.gameMap.visible[self.entity.x, self.entity.y]:
+
+        if self.entity.gameMap.visible[self.entity.x, self.entity.y]:
             if distance <= 1:
                 return None
 
-            self.path = self.get_path_to(target.x, target.y)
-            self.
+            self.entity.pathComponent.setPathTo(self.player.x, self.player.y)
 
-        if self.path:
-            dest_x, dest_y = self.path.pop(0)
-            return MovementAction(
-                self.entity, dest_x - self.entity.x, dest_y - self.entity.y,
-            ).perform()
+        if len(self.entity.pathComponent.path) > 0:
+            destX, destY = self.entity.pathComponent.path.pop(0)
+            return MovementAction(self.entity, destX - self.entity.x, destY - self.entity.y)
 
-        return WaitAction(self.entity).perform()
-        """
+        return None
+
+
+class DeadState(State):
+    def getAction(self) -> Optional[Action]:
         return None
 
 class AIComponent(Component):
-    def __init__(self, player: Entity):
+    def __init__(self):
         super().__init__()
-        self.player = player
-
-    def getAction(self, gameMap: GameMap) -> Action:
-        raise NotImplementedError()
 
     def onOwnerChanged(self):
         self.owner.aiComponent = self
+
+    def getAction(self) -> Optional[Action]:
+        raise NotImplementedError()
 
 
 class MeleeHostileAIComponent(AIComponent):
     def __init__(self):
         super().__init__()
-        self.stateMachine = StateMachine()
+        self.stateMachine: Optional[StateMachine] = None
+
+    def onAddToGameMap(self, gameMap: GameMap):
+        super().onAddToGameMap(gameMap)
+        self.stateMachine = StateMachine(GoToPlayerState(self.owner, self.owner.gameMap.player))
+
+        if self.owner.damageComponent:
+            self.owner.damageComponent.signalDie.addSlot(lambda: self.stateMachine.transition(DeadState(self.owner)))
+
+    def getAction(self) -> Optional[Action]:
+        if self.stateMachine:
+            return self.stateMachine.getAction()
+
+        return None
+

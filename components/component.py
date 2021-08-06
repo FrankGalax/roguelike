@@ -1,4 +1,5 @@
 from entity import Entity
+from gamemap import GameMap
 
 class Component:
     def __init__(self):
@@ -9,4 +10,7 @@ class Component:
         self.onOwnerChanged()
 
     def onOwnerChanged(self):
+        pass
+
+    def onAddToGameMap(self, gameMap: GameMap):
         pass
