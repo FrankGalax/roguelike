@@ -1,4 +1,4 @@
-from typing import Iterable, Any
+from typing import Iterable, Any, Optional
 
 from tcod.context import Context
 from tcod.console import Console
@@ -7,25 +7,64 @@ from tcod.map import compute_fov
 from entity import Entity
 from gamemap import GameMap
 from inputhandlers import EventHandler
+from statemachine import StateMachine, State
+from procgen import generateDungeon
+from actions import Action
 
 
-class Engine:
-    def __init__(self, eventHandler: EventHandler, gameMap: GameMap, player: Entity):
-        self.eventHandler = eventHandler
-        self.gameMap = gameMap
+class GameState(State):
+    def __init__(self, player: Entity, engine):
+        super().__init__(player)
         self.player = player
-        self.updateFov()
+        self.engine = engine
 
-    def handleEvents(self, events: Iterable[Any]) -> None:
+    def handleEvents(self, events: Iterable[Any]):
         for event in events:
-            action = self.eventHandler.dispatch(event)
+            action = self.engine.eventHandler.dispatch(event)
 
             if action is None:
                 continue
 
             action.perform()
-            self.handleEnemiesTurn()
-            self.updateFov()
+            self.onPlayerAction()
+
+    def onPlayerAction(self):
+        pass
+
+
+class DungeonGameState(GameState):
+    def __init__(self, player: Entity, engine):
+        super().__init__(player, engine)
+        self.gameMap: Optional[GameMap] = None
+
+    def enter(self):
+        mapWidth = 80
+        mapHeight = 45
+
+        roomMaxSize = 10
+        roomMinSize = 6
+        maxRooms = 30
+        maxMonstersPerRoom = 2
+
+        self.gameMap = generateDungeon(
+            maxRooms=maxRooms,
+            roomMinSize=roomMinSize,
+            roomMaxSize=roomMaxSize,
+            mapWidth=mapWidth,
+            mapHeight=mapHeight,
+            maxMonstersPerRoom=maxMonstersPerRoom,
+            player=self.player
+        )
+        self.player.setGameMap(self.gameMap)
+
+        self.updateFov()
+
+    def getAction(self) -> Optional[Action]:
+        return None
+
+    def onPlayerAction(self):
+        self.handleEnemiesTurn()
+        self.updateFov()
 
     def handleEnemiesTurn(self):
         for enemy in self.gameMap.entities - {self.player}:
@@ -42,9 +81,20 @@ class Engine:
         )
         self.gameMap.explored |= self.gameMap.visible
 
-    def render(self, console: Console, context: Context) -> None:
+    def render(self, console: Console, context: Context):
         self.gameMap.render(console)
-
         context.present(console)
-
         console.clear()
+
+
+class Engine:
+    def __init__(self, eventHandler: EventHandler, player: Entity):
+        self.eventHandler = eventHandler
+        self.player = player
+        self.stateMachine = StateMachine(DungeonGameState(self.player, self))
+
+    def handleEvents(self, events: Iterable[Any]) -> None:
+        self.stateMachine.handleEvents(events)
+
+    def render(self, console: Console, context: Context) -> None:
+        self.stateMachine.render(console, context)
