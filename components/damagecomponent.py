@@ -42,6 +42,18 @@ class DamageComponent(Component):
         else:
             self.owner.gameMap.messageLog.addMessage(f"{attackDesc} but does no damage")
 
+    def heal(self, amount: int):
+        if amount > self.maxHp - self.currentHp:
+            amount = self.maxHp - self.currentHp
+
+        self.currentHp += amount
+
+        if amount == 0:
+            self.owner.gameMap.messageLog.addMessage(f"{self.owner.name} is already at maximum hit points", color.healthRecovered)
+        else:
+            self.owner.gameMap.messageLog.addMessage(f"{self.owner.name} heals for {amount} hit points", color.healthRecovered)
+
+        self.signalCurrentHpChanged.signal1(self.currentHp)
 
     def die(self):
         deathMessage = f"{self.owner.name} is dead!"

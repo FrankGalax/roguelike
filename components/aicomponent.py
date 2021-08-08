@@ -36,6 +36,7 @@ class DeadState(State):
     def getAction(self) -> Optional[Action]:
         return None
 
+
 class AIComponent(Component):
     def __init__(self):
         super().__init__()

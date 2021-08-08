@@ -33,6 +33,7 @@ def generateDungeon(
     mapWidth: int,
     mapHeight: int,
     maxMonstersPerRoom: int,
+    maxItemsPerRoom: int,
     player: Entity,
 ) -> GameMap:
     dungeon = GameMap(mapWidth, mapHeight, entities=[player], player=player)
@@ -59,14 +60,14 @@ def generateDungeon(
             for x, y in tunnelBetween(rooms[-1].center, newRoom.center):
                 dungeon.tiles[x, y] = tiletypes.floor
 
-        placeEntities(newRoom, dungeon, maxMonstersPerRoom)
+        placeEntities(newRoom, dungeon, maxMonstersPerRoom, maxItemsPerRoom)
 
         rooms.append(newRoom)
 
     return dungeon
 
 
-def placeEntities(room: RectangularRoom, dungeon: GameMap, maxMonstersPerRoom: int) -> None:
+def placeEntities(room: RectangularRoom, dungeon: GameMap, maxMonstersPerRoom: int, maxItemsPerRoom: int) -> None:
     nbMonsters = random.randint(0, maxMonstersPerRoom)
 
     for i in range(nbMonsters):
@@ -78,3 +79,12 @@ def placeEntities(room: RectangularRoom, dungeon: GameMap, maxMonstersPerRoom: i
                 entityfactories.spawnEntity(entityfactories.orc, dungeon, x, y)
             else:
                 entityfactories.spawnEntity(entityfactories.troll, dungeon, x, y)
+
+    nbItems = random.randint(0, maxItemsPerRoom)
+
+    for i in range(nbItems):
+        x = random.randint(room.x1 + 1, room.x2 - 1)
+        y = random.randint(room.y1 + 1, room.y2 - 1)
+
+        if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
+            entityfactories.spawnEntity(entityfactories.healthPotion, dungeon, x, y)

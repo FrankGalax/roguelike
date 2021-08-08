@@ -1,6 +1,7 @@
 from typing import Tuple
 from enum import auto, Enum
 
+
 class RenderOrder(Enum):
     Corpse = auto()
     Item = auto()
@@ -29,6 +30,9 @@ class Entity:
         self.meleeComponent = None
         self.pathComponent = None
         self.aiComponent = None
+        self.pickupableComponent = None
+        self.inventoryComponent = None
+        self.itemComponent = None
         self.renderOrder = renderOrder
         self.gameMap = None
 

@@ -19,7 +19,7 @@ def main():
 
     eventHandler = EventHandler(player)
 
-    engine = Engine(eventHandler=eventHandler, player=player)
+    engine = Engine(player=player)
 
     with tcod.context.new_terminal(
         screenWidth,
@@ -34,7 +34,7 @@ def main():
 
             events = tcod.event.wait()
 
-            engine.handleEvents(events)
+            engine.handleEvents(events, context)
 
 
 if __name__ == '__main__':

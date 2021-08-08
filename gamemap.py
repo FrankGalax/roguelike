@@ -42,3 +42,12 @@ class GameMap:
                 return entity
 
         return None
+
+    def getEntityAtLocation(self, x: int, y: int, allowPlayer: bool) -> Optional[Entity]:
+        for entity in self.entities:
+            if entity.x == x and entity.y == y:
+                if not entity.isPlayer or allowPlayer:
+                    return entity
+
+    def removeEntity(self, entity: Entity):
+        self.entities.remove(entity)

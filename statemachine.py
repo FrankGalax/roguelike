@@ -5,6 +5,7 @@ from entity import Entity
 class State:
     def __init__(self, entity: Entity):
         self.entity = entity
+        self.ownerStateMachine: Optional[StateMachine] = None
 
     def enter(self):
         pass
@@ -12,10 +13,16 @@ class State:
     def exit(self):
         pass
 
+    def transition(self, state):
+        self.ownerStateMachine.transition(state)
+
     def getAction(self) -> Optional[Action]:
         return None
 
-    def handleEvents(self, events):
+    def handleEvents(self, events, context):
+        pass
+
+    def onHandleEvents(self):
         pass
 
     def render(self, console, context):
@@ -26,6 +33,7 @@ class StateMachine:
     def __init__(self, state: Optional[State]):
         self.state: Optional[State] = state
         if self.state:
+            self.state.ownerStateMachine = self
             self.state.enter()
 
     def transition(self, state: State):
@@ -35,6 +43,7 @@ class StateMachine:
         self.state = state
 
         if self.state:
+            self.state.ownerStateMachine = self
             self.state.enter()
 
     def getAction(self) -> Optional[Action]:
@@ -43,9 +52,13 @@ class StateMachine:
 
         return None
 
-    def handleEvents(self, events):
+    def handleEvents(self, events, context):
         if self.state:
-            self.state.handleEvents(events)
+            self.state.handleEvents(events, context)
+
+    def onHandleEvents(self):
+        if self.state:
+            self.state.onHandleEvents()
 
     def render(self, console, context):
         if self.state:
