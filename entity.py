@@ -1,5 +1,6 @@
 from typing import Tuple
 from enum import auto, Enum
+import math
 
 
 class RenderOrder(Enum):
@@ -33,6 +34,7 @@ class Entity:
         self.pickupableComponent = None
         self.inventoryComponent = None
         self.itemComponent = None
+        self.requestGameStateComponent = None
         self.renderOrder = renderOrder
         self.gameMap = None
 
@@ -42,6 +44,9 @@ class Entity:
     def move(self, dx: int, dy: int):
         self.x += dx
         self.y += dy
+
+    def distance(self, x: int, y: int):
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
 
     def addComponent(self, component):
         component.setOwner(self)

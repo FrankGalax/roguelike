@@ -24,13 +24,13 @@ class DungeonEventHandler(EventHandler):
 
         key = event.sym
 
-        if key == tcod.event.K_UP:
+        if key == tcod.event.K_UP or key == tcod.event.K_w:
             action = BumpAction(self.player, dx=0, dy=-1)
-        elif key == tcod.event.K_DOWN:
+        elif key == tcod.event.K_DOWN or key == tcod.event.K_s:
             action = BumpAction(self.player, dx=0, dy=1)
-        elif key == tcod.event.K_LEFT:
+        elif key == tcod.event.K_LEFT or key == tcod.event.K_a:
             action = BumpAction(self.player, dx=-1, dy=0)
-        elif key == tcod.event.K_RIGHT:
+        elif key == tcod.event.K_RIGHT or key == tcod.event.K_d:
             action = BumpAction(self.player, dx=1, dy=0)
         elif key == tcod.event.K_e:
             action = PickupAction(self.player)
@@ -82,3 +82,22 @@ class ViewInventoryEventHandler(EventHandler):
             self.exitViewInventoryRequested = True
 
         return action
+
+
+class TargetEventHandler(EventHandler):
+    def __init__(self, player: Entity):
+        super().__init__(player)
+        self.mouseLocation = (player.x, player.y)
+        self.targetSelected = False
+
+    def ev_mousemotion(self, event: tcod.event.MouseMotion):
+        if self.player:
+            if self.player.gameMap:
+                if self.player.gameMap.inBounds(event.tile.x, event.tile.y):
+                    if self.player.gameMap.visible[event.tile.x, event.tile.y]:
+                        self.mouseLocation = event.tile.x, event.tile.y
+
+    def ev_mousebuttondown(self, event: tcod.event.MouseButtonDown) -> Optional[Action]:
+        if self.player.gameMap.inBounds(*event.tile):
+            if event.button == 1:
+                self.targetSelected = True

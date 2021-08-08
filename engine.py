@@ -7,11 +7,12 @@ from tcod.map import compute_fov
 
 from entity import Entity
 from gamemap import GameMap
-from inputhandlers import EventHandler, DungeonEventHandler, ViewInventoryEventHandler
+from inputhandlers import EventHandler, DungeonEventHandler, ViewInventoryEventHandler, TargetEventHandler
 from statemachine import StateMachine, State
 from procgen import generateDungeon
-from actions import Action
 from ui import UI
+from components.requestgamestatecomponent import GameStateRequest
+import color
 
 
 class GameState(State):
@@ -32,14 +33,22 @@ class GameState(State):
                 action.perform()
                 if action.success:
                     self.onPlayerAction()
+                else:
+                    requestGameStateComponent = self.player.requestGameStateComponent
+                    if requestGameStateComponent and requestGameStateComponent.requestedGameState:
+                        self.onRequestedGameState(requestGameStateComponent.requestedGameState)
+                        requestGameStateComponent.requestedGameState = None
 
             self.onHandleEvents()
 
     def onPlayerAction(self):
         pass
 
+    def onRequestedGameState(self, requestedGameState: GameStateRequest):
+        pass
 
-class IdleDungeonGameState(State):
+
+class IdleDungeonState(State):
     def __init__(self, player: Entity, engine):
         super().__init__(player)
         self.engine = engine
@@ -50,10 +59,10 @@ class IdleDungeonGameState(State):
     def onHandleEvents(self):
         if self.engine.eventHandler.viewInventoryRequested:
             self.engine.eventHandler.viewInventoryRequested = False
-            self.transition(ViewingInventoryGameState(self.entity, self.engine))
+            self.transition(ViewingInventoryState(self.entity, self.engine))
 
 
-class ViewingInventoryGameState(State):
+class ViewingInventoryState(State):
     def __init__(self, player: Entity, engine):
         super().__init__(player)
         self.engine = engine
@@ -64,7 +73,7 @@ class ViewingInventoryGameState(State):
     def onHandleEvents(self):
         if self.engine.eventHandler.exitViewInventoryRequested:
             self.engine.eventHandler.exitViewInventoryRequested = False
-            self.transition(IdleDungeonGameState(self.entity, self.engine))
+            self.transition(IdleDungeonState(self.entity, self.engine))
 
     def render(self, console, context):
         nbInventoryItems = len(self.entity.inventoryComponent.items)
@@ -100,12 +109,62 @@ class ViewingInventoryGameState(State):
             console.print(x + 1, y + 1, "(Empty)")
 
 
+class SingleRangeTargetState(State):
+    def __init__(self, player: Entity, engine, callback):
+        super().__init__(player)
+        self.engine = engine
+        self.callback = callback
+
+    def enter(self):
+        self.engine.eventHandler = TargetEventHandler(self.entity)
+
+    def onHandleEvents(self):
+        if self.engine.eventHandler.targetSelected:
+            target = self.entity.gameMap.getEntityAtLocation(self.engine.eventHandler.mouseLocation[0],
+                                                             self.engine.eventHandler.mouseLocation[1],
+                                                             allowPlayer=False)
+            self.callback(target)
+            self.transition(IdleDungeonState(self.entity, self.engine))
+
+    def render(self, console, context):
+        x, y = self.engine.eventHandler.mouseLocation
+        console.tiles_rgb["bg"][x, y] = color.white
+        console.tiles_rgb["fg"][x, y] = color.black
+
+
+class AreaRangeTargetState(State):
+    def __init__(self, player: Entity, engine, radius: int, callback):
+        super().__init__(player)
+        self.engine = engine
+        self.radius = radius
+        self.callback = callback
+
+    def enter(self):
+        self.engine.eventHandler = TargetEventHandler(self.entity)
+
+    def onHandleEvents(self):
+        if self.engine.eventHandler.targetSelected:
+            self.callback(self.engine.eventHandler.mouseLocation[0], self.engine.eventHandler.mouseLocation[1])
+            self.transition(IdleDungeonState(self.entity, self.engine))
+
+    def render(self, console, context):
+        x, y = self.engine.eventHandler.mouseLocation
+
+        console.draw_frame(
+            x=x - self.radius - 1,
+            y=y - self.radius - 1,
+            width=self.radius ** 2,
+            height=self.radius ** 2,
+            fg=color.red,
+            clear=False,
+        )
+
 class DungeonGameState(GameState):
     def __init__(self, player: Entity, engine):
         super().__init__(player, engine)
         self.gameMap: Optional[GameMap] = None
         self.ui = UI(player)
-        self.stateMachine = StateMachine(IdleDungeonGameState(self.player, self.engine))
+        self.stateMachine = StateMachine(IdleDungeonState(self.player, self.engine))
 
     def enter(self):
         mapWidth = 80
@@ -131,9 +190,6 @@ class DungeonGameState(GameState):
 
         self.updateFov()
 
-    def getAction(self) -> Optional[Action]:
-        return None
-
     def onPlayerAction(self):
         self.handleEnemiesTurn()
         self.updateFov()
@@ -143,6 +199,14 @@ class DungeonGameState(GameState):
 
     def onHandleEvents(self):
         self.stateMachine.onHandleEvents()
+
+    def onRequestedGameState(self, requestedGameState: GameStateRequest):
+        if requestedGameState.name == "SingleRangeTargetState":
+            self.stateMachine.transition(SingleRangeTargetState(
+                self.player, self.engine, requestedGameState.callback))
+        elif requestedGameState.name == "AreaRangeTargetState":
+            self.stateMachine.transition(AreaRangeTargetState(
+                self.player, self.engine, requestedGameState.int1, requestedGameState.callback))
 
     def handleEnemiesTurn(self):
         for enemy in self.gameMap.entities - {self.player}:

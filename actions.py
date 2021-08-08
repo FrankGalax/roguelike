@@ -144,4 +144,8 @@ class UseItemAction(Action):
         self.entity.gameMap.messageLog.addMessage(f"{self.entity.name} used the {item.name}", color.itemPickedUp)
         item.itemComponent.apply(self.entity)
         self.entity.inventoryComponent.items.remove(item)
+
+        if self.entity.requestGameStateComponent and self.entity.requestGameStateComponent.requestedGameState:
+            return
+
         self.success = True

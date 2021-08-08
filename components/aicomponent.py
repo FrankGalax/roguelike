@@ -2,8 +2,9 @@ from typing import Optional
 from components.component import Component
 from entity import Entity
 from gamemap import GameMap
-from actions import Action, MovementAction, MeleeAction
+from actions import Action, MovementAction, MeleeAction, BumpAction
 from statemachine import StateMachine, State
+import random
 
 
 class GoToPlayerState(State):
@@ -37,6 +38,34 @@ class DeadState(State):
         return None
 
 
+class ConfusionState(State):
+    def __init__(self, entity: Entity, nbTurns: int):
+        super().__init__(entity)
+        self.nbTurns = nbTurns
+
+    def getAction(self) -> Optional[Action]:
+        directionX, directionX = random.choice(
+            [
+                (-1, -1),  # Northwest
+                (0, -1),  # North
+                (1, -1),  # Northeast
+                (-1, 0),  # West
+                (1, 0),  # East
+                (-1, 1),  # Southwest
+                (0, 1),  # South
+                (1, 1),  # Southeast
+            ]
+        )
+
+        self.nbTurns -= 1
+
+        if self.nbTurns == 0:
+            self.entity.gameMap.messageLog.addMessage(f"The {self.entity.name} is no longer confused.")
+            self.transition(GoToPlayerState(self.entity, self.entity.gameMap.player))
+
+        return BumpAction(self.entity, directionX, directionX)
+
+
 class AIComponent(Component):
     def __init__(self):
         super().__init__()
@@ -47,6 +76,8 @@ class AIComponent(Component):
     def getAction(self) -> Optional[Action]:
         raise NotImplementedError()
 
+    def confuse(self, nbTurns: int):
+        pass
 
 class MeleeHostileAIComponent(AIComponent):
     def __init__(self):
@@ -66,3 +97,5 @@ class MeleeHostileAIComponent(AIComponent):
 
         return None
 
+    def confuse(self, nbTurns: int):
+        self.stateMachine.transition(ConfusionState(self.owner, nbTurns))

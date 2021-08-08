@@ -87,4 +87,12 @@ def placeEntities(room: RectangularRoom, dungeon: GameMap, maxMonstersPerRoom: i
         y = random.randint(room.y1 + 1, room.y2 - 1)
 
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
-            entityfactories.spawnEntity(entityfactories.healthPotion, dungeon, x, y)
+            r = random.random()
+            if r < 0.3:
+                entityfactories.spawnEntity(entityfactories.lightningScroll, dungeon, x, y)
+            elif r < 0.4:
+                entityfactories.spawnEntity(entityfactories.confusionScroll, dungeon, x, y)
+            elif r < 0.5:
+                entityfactories.spawnEntity(entityfactories.fireballScroll, dungeon, x, y)
+            else:
+                entityfactories.spawnEntity(entityfactories.healthPotion, dungeon, x, y)
