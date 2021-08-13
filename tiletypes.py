@@ -19,6 +19,7 @@ tileDt = np.dtype(
     ]
 )
 
+
 def newTile(
     *,
     walkable: int,

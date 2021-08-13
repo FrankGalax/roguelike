@@ -1,6 +1,5 @@
 from typing import List
 
-import color
 from components.component import Component
 
 from entity import Entity
@@ -8,6 +7,7 @@ from entity import Entity
 
 class InventoryComponent(Component):
     def __init__(self, maxItems: int):
+        super().__init__()
         self.items: List[Entity] = []
         self.maxItems = maxItems
 

@@ -101,3 +101,27 @@ class TargetEventHandler(EventHandler):
         if self.player.gameMap.inBounds(*event.tile):
             if event.button == 1:
                 self.targetSelected = True
+
+        return None
+
+
+class MainMenuEventHandler(EventHandler):
+    def __init__(self, player: Entity):
+        super().__init__(player)
+        self.newGameRequested = False
+        self.continueRequested = False
+
+    def ev_quit(self, event: tcod.event.Quit) -> Optional[Action]:
+        raise SystemExit()
+
+    def ev_keydown(self, event: tcod.event.KeyDown) -> Optional[Action]:
+        key = event.sym
+
+        if key == tcod.event.K_n:
+            self.newGameRequested = True
+        if key == tcod.event.K_c:
+            self.continueRequested = True
+        if key == tcod.event.K_q or key == tcod.event.K_ESCAPE:
+            raise SystemExit()
+
+        return None

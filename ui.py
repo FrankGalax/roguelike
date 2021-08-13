@@ -25,6 +25,6 @@ class UI:
         console.draw_rect(x=0, y=45, width=20, height=1, ch=1, bg=color.barEmpty)
 
         if bar_width > 0:
-            console.draw_rect(x = 0, y = 45, width = bar_width, height = 1, ch = 1, bg = color.barFilled)
+            console.draw_rect(x=0, y=45, width=bar_width, height=1, ch=1, bg=color.barFilled)
 
-        console.print(x = 1, y = 45, string = f"HP: {self.playerCurrentHp}/{self.playerMaxHp}", fg = color.barText)
+        console.print(x=1, y=45, string=f"HP: {self.playerCurrentHp}/{self.playerMaxHp}", fg=color.barText)

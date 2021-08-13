@@ -7,6 +7,7 @@ from entity import Entity
 from message import MessageLog
 import color
 
+
 class GameMap:
     def __init__(self, width: int, height: int, entities: Iterable[Entity] = (), player: Optional[Entity] = None):
         self.width, self.height = width, height
@@ -28,7 +29,7 @@ class GameMap:
             default=tiletypes.SHROUD
         )
 
-        sortedEntities = sorted(self.entities, key= lambda x: x.renderOrder.value)
+        sortedEntities = sorted(self.entities, key=lambda x: x.renderOrder.value)
 
         for entity in sortedEntities:
             if self.visible[entity.x, entity.y]:

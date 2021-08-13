@@ -11,7 +11,7 @@ import tiletypes
 
 
 def tunnelBetween(
-    start : Tuple[int, int], end: Tuple[int, int]
+    start: Tuple[int, int], end: Tuple[int, int]
 ) -> Iterator[Tuple[int, int]]:
     x1, y1 = start
     x2, y2 = end

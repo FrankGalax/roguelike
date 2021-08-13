@@ -4,6 +4,8 @@ import tcod
 from tcod.context import Context
 from tcod.console import Console
 from tcod.map import compute_fov
+import lzma
+import pickle
 
 from entity import Entity
 from gamemap import GameMap
@@ -44,7 +46,7 @@ class GameState(State):
     def onPlayerAction(self):
         pass
 
-    def onRequestedGameState(self, requestedGameState: GameStateRequest):
+    def onRequestedGameState(self, requestedGameState: Optional[GameStateRequest]):
         pass
 
 
@@ -159,6 +161,7 @@ class AreaRangeTargetState(State):
             clear=False,
         )
 
+
 class DungeonGameState(GameState):
     def __init__(self, player: Entity, engine):
         super().__init__(player, engine)
@@ -194,13 +197,10 @@ class DungeonGameState(GameState):
         self.handleEnemiesTurn()
         self.updateFov()
 
-        if not self.player.damageComponent.isAlive:
-            self.engine.stateMachine.transition(DeadPlayerGameState(self.player, self.engine))
-
     def onHandleEvents(self):
         self.stateMachine.onHandleEvents()
 
-    def onRequestedGameState(self, requestedGameState: GameStateRequest):
+    def onRequestedGameState(self, requestedGameState: Optional[GameStateRequest]):
         if requestedGameState.name == "SingleRangeTargetState":
             self.stateMachine.transition(SingleRangeTargetState(
                 self.player, self.engine, requestedGameState.callback))
@@ -227,7 +227,8 @@ class DungeonGameState(GameState):
         if not self.gameMap.inBounds(location[0], location[1]) or not self.gameMap.visible[location[0], location[1]]:
             return
 
-        names = ", ".join(entity.name for entity in self.gameMap.entities if entity.x == location[0] and entity.y == location[1])
+        names = ", ".join(entity.name for entity in self.gameMap.entities if entity.x == location[0] and
+                          entity.y == location[1])
         console.print(x=x, y=y, string=names)
 
     def render(self, console: Console, context: Context):
@@ -241,20 +242,32 @@ class DungeonGameState(GameState):
         console.clear()
 
 
-class DeadPlayerGameState(GameState):
-    def render(self, console: Console, context: Context):
-        context.present(console)
-        console.clear()
-
-
 class Engine:
-    def __init__(self, player: Entity):
-        self.eventHandler: Optional[EventHandler] = None
-        self.player = player
-        self.stateMachine = StateMachine(DungeonGameState(self.player, self))
+    def __init__(self, player: Entity, saveFile : Optional[str]):
+        if saveFile:
+            self.loadGame("savegame.sav")
+        else:
+            self.eventHandler: Optional[EventHandler] = None
+            self.player = player
+            self.stateMachine = StateMachine(DungeonGameState(self.player, self))
 
     def handleEvents(self, events: Iterable[Any], context: tcod.context.Context) -> None:
-        self.stateMachine.handleEvents(events, context)
+        try:
+            self.stateMachine.handleEvents(events, context)
+        except SystemExit:
+            self.saveGame("savegame.sav")
+            raise
 
     def render(self, console: Console, context: Context) -> None:
         self.stateMachine.render(console, context)
+
+    def saveGame(self, saveFile: str):
+        """Save this Engine instance as a compressed file."""
+        save_data = lzma.compress(pickle.dumps(self))
+        with open(saveFile, "wb") as f:
+            f.write(save_data)
+
+    def loadGame(self, saveFile: str):
+        with open(saveFile, "rb") as f:
+            self = pickle.loads(lzma.decompress(f.read()))
+        assert isinstance(self, Engine)

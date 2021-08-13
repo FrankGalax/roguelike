@@ -2,6 +2,7 @@ from typing import Optional
 from actions import Action
 from entity import Entity
 
+
 class State:
     def __init__(self, entity: Entity):
         self.entity = entity

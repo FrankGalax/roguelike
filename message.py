@@ -1,4 +1,4 @@
-from typing import List, Reversible, Tuple
+from typing import List, Tuple
 import textwrap
 import tcod
 import color
